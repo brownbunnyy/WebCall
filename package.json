@@ -1,0 +1,19 @@
+{
+  "name": "WebCall",
+  "version": "1.0.0",
+  "description": "My smashing Nuxt.js project",
+  "author": "熊井利充",
+  "private": true,
+  "scripts": {
+    "dev": "nuxt",
+    "build": "nuxt build",
+    "start": "nuxt start",
+    "generate": "nuxt generate"
+  },
+  "dependencies": {
+    "@nuxtjs/axios": "^5.3.6",
+    "nuxt": "^2.0.0",
+    "skyway-js": "^2.0.5"
+  },
+  "devDependencies": {}
+}
