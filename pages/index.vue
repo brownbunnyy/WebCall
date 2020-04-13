@@ -45,7 +45,7 @@ export default {
 
   data () {
     return {
-      APIKey: 'e2c46abb-1d76-40fa-92d5-961f062d07ad',
+      APIKey: process.env.API_KEY,
       selectedAudio: '',
       selectedVideo: '',
       audios: [],

@@ -1,4 +1,7 @@
 
+require('dotenv').config();
+const { API_KEY } = process.env;
+
 export default {
   mode: 'universal',
   /*
@@ -56,5 +59,8 @@ export default {
     */
     extend (config, ctx) {
     }
-  }
+  },
+  env: {
+    API_KEY
+  },
 }
