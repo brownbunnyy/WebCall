@@ -1,48 +1,53 @@
 <template>
-  <section class="container">
-    <div>
-      <video id="their-video" width="200" autoplay playsinline></video>
-      <video id="my-video" muted="true" width="200" autoplay playsinline></video>
+    <v-content>
+      <v-container fluid>
+        <v-row>
+          <v-col>
+            <h2>room: <span id="room-name" v-if="room">{{room.name}}</span></h2>
+            <template v-for="(stream,i) in remoteStreams">
+              <video :key="i" :id="stream.id" :srcObject.prop="stream.src" width="40%" autoplay></video>
+            </template>
+          </v-col>
+        </v-row>
+        <v-row>
+          <v-col>
+            <v-select 
+              @change="changeDevice"
+              v-model="selectedAudio"
+              :items="audios"
+              item-value="value"
+              label="マイク"
+            />
+            <v-select 
+              @change="changeDevice"
+              v-model="selectedVideo"
+              :items="videos"
+              item-value="value"
+              label="カメラ"
+            />
+          </v-col>
+        </v-row>
+        <v-row>
+          <v-col>
+            <v-text-field v-model="roomId" placeholder="Room ID"/>
+            <button @click="makeRoom" class="button--green">Make Room</button>
+          </v-col>
+        </v-row>
+        <v-textarea
+          outlined
+          disabled
+          v-model="messages"
+        ></v-textarea>
+        <v-text-field v-model="localText" placeholder="メッセージを送信"/>
+        <button @click="sendMessage" class="button--green">送信</button>
 
-      <div class="main">
-        <h2>Nuxt.js + SkyWayのビデオチャット</h2>
-        マイク:
-        <select v-model="selectedAudio" @change="onChange">
-          <option disabled value="">Please select one</option>
-          <option v-for="(audio, key, index) in audios" v-bind:key="index" :value="audio.value">
-            {{ audio.text }}
-          </option>
-        </select>
-
-        カメラ: 
-        <select v-model="selectedVideo" @change="onChange">
-          <option disabled value="">Please select one</option>
-          <option v-for="(video, key, index) in videos" v-bind:key="index" :value="video.value">
-            {{ video.text }}
-          </option>
-        </select>
-
-        <div>
-          <p>Your id: <span id="my-id">{{peerId}}</span></p>
-          <p>他のブラウザでこのIDをコールしましょう。</p>
-          <h3>コールする</h3>
-          <input v-model="calltoid" placeholder="call id">
-          <button @click="makeCall" class="button--green">Call</button>
-        </div>
-      </div>
-
-    </div>
-  </section>
+    </v-container>
+  </v-content>
 </template>
 
 <script>
-import Logo from '~/components/Logo.vue'
 
 export default {
-  components: {
-    Logo,
-  },
-
   data () {
     return {
       APIKey: process.env.API_KEY,
@@ -51,42 +56,104 @@ export default {
       audios: [],
       videos: [],
       localStream: null,
+      remoteStreams: [],
+      room: null,
       peerId: '',
-      calltoid: ''
+      roomId: 'test',
+      calltoid: '',
+      messages: '',
+      localText: '',
     }
   },
-
   methods: {
-    onChange: function () {
+    changeDevice: function () {
       if(this.selectedAudio != '' && this.selectedVideo != ''){
         this.connectLocalCamera();
       }
     },
-
     connectLocalCamera: async function(){
       const constraints = {
-        audio: this.selectedAudio ? { deviceId: { exact: this.selectedAudio } } : false,
+        // audio: this.selectedAudio ? { deviceId: { exact: this.selectedAudio } } : false,
+        audio: false,
         video: this.selectedVideo ? { deviceId: { exact: this.selectedVideo } } : false
       }
-
+      constraints.video.width = {
+        min: 320,
+        max: 320
+      };
+      constraints.video.height = {
+        min: 240,
+        max: 240
+      };
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
-      document.getElementById('my-video').srcObject = stream;
       this.localStream = stream;
+      this.localStream.peerId = this.peerId;
+      this.addStream(this.localStream);
     },
-
-    makeCall: function () {
-      console.log('makeCall');
-      const call = this.peer.call(this.calltoid, this.localStream);
-      this.connect(call);
-    },
-
-    connect: function (call) {
-      call.on('stream', stream => {
-        const el = document.getElementById('their-video');
-        el.srcObject = stream;
-        el.play();
+    makeRoom: function () {
+      const room = this.peer.joinRoom(this.roomId, {
+        mode: 'mesh',
+        stream: this.localStream,
       });
-    }
+      this.connect(room);
+    },
+
+    connect: function (room) {
+      if (this.room) {
+        this.room.close();
+      }
+      this.room = room;
+
+      room.once('open', () => {
+        this.messages += '=== You joined ===\n';
+      });
+
+      room.on('peerJoin', peerId => {
+        this.messages += `=== ${peerId} joined ===\n`;
+      });
+
+      room.on('peerLeave', peerId => {
+          this.messages += `=== ${peerId} lefted ===\n`;
+          this.removeStream(peerId);
+      });
+
+      room.on('data', ({ data, src }) => {
+        this.messages += `${src}: ${data}\n`;
+      });
+
+      room.on('close', function(){
+        removeStream(room.remoteId);
+      });
+
+      room.on('stream', stream => {
+        this.addStream(stream);
+      });
+    },
+    addStream: function (stream) {
+      let peerId = (stream.peerId) ? stream.peerId :this.peerId;
+      this.remoteStreams.push({
+        id: 'data-peer-id-' + peerId,
+        status: false,
+        src: stream,
+      })
+    },
+
+    removeStream: function (peerId) {
+      let index = this.remoteStreams.findIndex( stream => {
+        return stream.peerId === peerId
+      });
+      this.remoteStreams.splice(index);
+    },
+
+    sendMessage: function () {
+      if (!this.room) {
+        alert('ルームに参加していません');
+        return;
+      }
+      this.room.send(this.localText);
+      this.messages += `${this.peerId}: ${this.localText}\n`;
+      this.localText = '';
+    },
   },
 
   mounted: function () {
@@ -97,12 +164,7 @@ export default {
     });
 
     this.peer.on('open', () => {
-      this.peerId = this.peer.id
-    });
-
-    this.peer.on('call', call => {
-      call.answer(this.localStream);
-      this.connect(call);
+      this.peerId = this.peer.id;
     });
 
     //デバイスへのアクセス
@@ -124,7 +186,11 @@ export default {
           })
         }
       }
-    })
+    }).then(()=>{
+      this.selectedAudio = this.audios[0].value;
+      this.selectedVideo = this.videos[0].value;
+      this.connectLocalCamera();
+    });
   }
 }
 </script>
