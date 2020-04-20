@@ -102,6 +102,7 @@ export default {
 
     // ルームに参加
     makeRoom: function () {
+      this.changeDevice();
       const room = this.peer.joinRoom(this.roomId, {
         mode: 'mesh',
         stream: this.localStream,
@@ -141,11 +142,17 @@ export default {
         this.addStream(stream);
       });
     },
+
     addStream: function (stream) {
-      let peerId = (stream.peerId) ? stream.peerId :this.peerId;
+      let peerId = (stream.peerId) ? stream.peerId : this.peerId;
+      let is_exist = this.remoteStreams.find( stream => {
+        return stream.src.peerId == peerId
+      });
+      if (is_exist) {
+        return;
+      }
       this.remoteStreams.push({
         id: 'data-peer-id-' + peerId,
-        status: false,
         src: stream,
       })
     },
@@ -203,7 +210,6 @@ export default {
     }).then(()=>{
       this.selectedAudio = this.audios[0].value;
       this.selectedVideo = this.videos[0].value;
-      this.connectLocalCamera();
     });
   }
 }
