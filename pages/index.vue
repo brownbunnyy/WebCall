@@ -5,7 +5,7 @@
           <v-col>
             <h2>room: <span id="room-name" v-if="room">{{room.name}}</span></h2>
             <template v-for="(stream,i) in remoteStreams">
-              <video :key="i" :id="stream.id" :srcObject.prop="stream.src" width="40%" autoplay></video>
+              <video :key="i" :id="stream.id" :srcObject.prop="stream.src" width="50%" autoplay></video>
             </template>
           </v-col>
         </v-row>
@@ -40,7 +40,7 @@
           v-model="messages"
         ></v-textarea>
         <v-text-field v-model="localText" placeholder="メッセージを送信"/>
-        <button @click="sendMessage" class="button--green">送信</button>
+        <button @click="sendMessage" class="button--green">send</button>
 
     </v-container>
   </v-content>
@@ -61,7 +61,6 @@ export default {
       room: null,
       peerId: '',
       roomId: 'test',
-      calltoid: '',
       messages: '',
       localText: '',
     }
@@ -72,10 +71,10 @@ export default {
         this.connectLocalCamera();
       }
     },
+
     connectLocalCamera: async function(){
       const constraints = {
-        // audio: this.selectedAudio ? { deviceId: { exact: this.selectedAudio } } : false,
-        audio: false,
+        audio: this.selectedAudio ? { deviceId: { exact: this.selectedAudio } } : false,
         video: this.selectedVideo ? { deviceId: { exact: this.selectedVideo } } : false
       }
       constraints.video.width = {
@@ -117,20 +116,20 @@ export default {
       this.room = room;
 
       room.once('open', () => {
-        this.messages += '=== You joined ===\n';
+        this.messages += (new Date()) + '=== You joined ===\n';
       });
 
       room.on('peerJoin', peerId => {
-        this.messages += `=== ${peerId} joined ===\n`;
+        this.messages += (new Date()) +`=== ${peerId} joined ===\n`;
       });
 
       room.on('peerLeave', peerId => {
-          this.messages += `=== ${peerId} lefted ===\n`;
+          this.messages += (new Date()) +`=== ${peerId} lefted ===\n`;
           this.removeStream(peerId);
       });
 
       room.on('data', ({ data, src }) => {
-        this.messages += `${src}: ${data}\n`;
+        this.messages += (new Date()) + `${src}: ${data}\n`;
       });
 
       room.once('close', () => {
@@ -172,7 +171,7 @@ export default {
         return;
       }
       this.room.send(this.localText);
-      this.messages += `${this.peerId}: ${this.localText}\n`;
+      this.messages += (new Date()) + `${this.peerId}: ${this.localText}\n`;
       this.localText = '';
     },
   },
