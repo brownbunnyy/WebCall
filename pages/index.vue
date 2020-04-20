@@ -30,7 +30,8 @@
         <v-row>
           <v-col>
             <v-text-field v-model="roomId" placeholder="Room ID"/>
-            <button @click="makeRoom" class="button--green">Make Room</button>
+            <button @click="leaveRoom" class="button--green">leave</button>
+            <button @click="makeRoom" class="button--green">make</button>
           </v-col>
         </v-row>
         <v-textarea
@@ -90,6 +91,16 @@ export default {
       this.localStream.peerId = this.peerId;
       this.addStream(this.localStream);
     },
+
+    // ルームから退出
+    leaveRoom: function () {
+      if (this.room) {
+        this.room.close();
+        this.room = null;
+      }
+    },
+
+    // ルームに参加
     makeRoom: function () {
       const room = this.peer.joinRoom(this.roomId, {
         mode: 'mesh',
@@ -121,8 +132,9 @@ export default {
         this.messages += `${src}: ${data}\n`;
       });
 
-      room.on('close', function(){
-        removeStream(room.remoteId);
+      room.once('close', () => {
+          this.messages += (new Date()) +`=== You lefted ===\n`;
+          this.removeStream(this.room.remoteId);
       });
 
       room.on('stream', stream => {
@@ -142,6 +154,8 @@ export default {
       let index = this.remoteStreams.findIndex( stream => {
         return stream.peerId === peerId
       });
+      this.remoteStreams[index].src.getTracks().forEach(track => track.stop());
+      this.remoteStreams[index].src = null;
       this.remoteStreams.splice(index);
     },
 
