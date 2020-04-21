@@ -79,7 +79,7 @@ export default {
       audios: [],
       videos: [],
       localStream: null,
-      remoteStreams: [],
+      streams: [],
       room: null,
       peerId: '',
       roomId: 'test',
@@ -87,12 +87,12 @@ export default {
       localText: '',
     }
   },
-  methods: {
-    changeDevice: function () {
-      if(this.selectedAudio != '' && this.selectedVideo != ''){
-        this.connectLocalCamera();
-      }
-    },
+  computed: {
+    now: function (){
+      let dd = new Date();
+      return `${dd.getMonth()}/${dd.getDate()} ${dd.getHours()}:${dd.getMinutes()}:${dd.getSeconds()}`;
+    }
+  },
   methods: {
     // changeDevice: function () {
     //   if(this.selectedAudio != '' && this.selectedVideo != ''){
@@ -131,11 +131,11 @@ export default {
     // ルームに参加
     makeRoom: function () {
       this.connectLocalCamera().then(()=>{
-      const room = this.peer.joinRoom(this.roomId, {
+        const room = this.peer.joinRoom(this.roomId, {
           mode: 'sfu',
-        stream: this.localStream,
-      });
-      this.connect(room);
+          stream: this.localStream,
+        });
+        this.connect(room);
       });
     },
 
@@ -146,29 +146,29 @@ export default {
       this.room = room;
 
       room.once('open', () => {
-        this.messages += (new Date()) + '=== You joined ===\n';
+        this.messages += this.now + '=== You joined ===\n';
       });
 
       room.on('peerJoin', peerId => {
-        this.messages += (new Date()) +`=== ${peerId} joined ===\n`;
+        this.messages += this.now +`=== ${peerId} joined ===\n`;
       });
 
       room.on('peerLeave', peerId => {
-          this.messages += (new Date()) +`=== ${peerId} lefted ===\n`;
+          this.messages += this.now +`=== ${peerId} lefted ===\n`;
           this.removeStream(peerId);
       });
 
       room.on('data', ({ data, src }) => {
-        this.messages += (new Date()) + `${src}: ${data}\n`;
+        this.messages += this.now + `${src}: ${data}\n`;
       });
 
       room.once('close', () => {
-          this.messages += (new Date()) +`=== You lefted ===\n`;
-          this.removeStream(this.room.remoteId);
+          this.messages += this.now +`=== You lefted ===\n`;
+          this.removeStream(this.peerId);
       });
 
       room.on('stream', stream => {
-        this.addStream(stream);
+          this.addStream(stream);
       });
     },
 
@@ -200,7 +200,7 @@ export default {
         return;
       }
       this.room.send(this.localText);
-      this.messages += (new Date()) + `${this.peerId}: ${this.localText}\n`;
+      this.messages += this.now + `${this.peerId}: ${this.localText}\n`;
       this.localText = '';
     },
   },
