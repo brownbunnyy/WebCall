@@ -34,14 +34,14 @@
         <v-row>
           <v-col>
             <v-select 
-              @change="changeDevice"
+              @change="connectLocalCamera"
               v-model="selectedAudio"
               :items="audios"
               item-value="value"
               label="マイク"
             />
             <v-select 
-              @change="changeDevice"
+              @change="connectLocalCamera"
               v-model="selectedVideo"
               :items="videos"
               item-value="value"
@@ -93,8 +93,17 @@ export default {
         this.connectLocalCamera();
       }
     },
-
+  methods: {
+    // changeDevice: function () {
+    //   if(this.selectedAudio != '' && this.selectedVideo != ''){
+    //     this.connectLocalCamera();
+    //   }
+    // },
     connectLocalCamera: async function(){
+      if(this.selectedAudio == '' && this.selectedVideo == ''){
+        return;
+      }
+
       const constraints = {
         audio: this.selectedAudio ? { deviceId: { exact: this.selectedAudio } } : false,
         video: this.selectedVideo ? { deviceId: { exact: this.selectedVideo } } : false
@@ -107,10 +116,8 @@ export default {
         min: 240,
         max: 240
       };
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
-      this.localStream = stream;
-      this.localStream.peerId = this.peerId;
-      this.addStream(this.localStream);
+      this.localStream = await navigator.mediaDevices.getUserMedia(constraints);
+      this.addStream(this.localStream,true);
     },
 
     // ルームから退出
@@ -123,12 +130,13 @@ export default {
 
     // ルームに参加
     makeRoom: function () {
-      this.changeDevice();
+      this.connectLocalCamera().then(()=>{
       const room = this.peer.joinRoom(this.roomId, {
-        mode: 'mesh',
+          mode: 'sfu',
         stream: this.localStream,
       });
       this.connect(room);
+      });
     },
 
     connect: function (room) {
