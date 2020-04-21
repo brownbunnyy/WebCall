@@ -172,27 +172,26 @@ export default {
       });
     },
 
-    addStream: function (stream) {
-      let peerId = (stream.peerId) ? stream.peerId : this.peerId;
-      let is_exist = this.remoteStreams.find( stream => {
-        return stream.src.peerId == peerId
-      });
+    addStream: function (stream, is_local = false) {
+      let peerId = is_local ? this.peerId : stream.peerId;
+      let is_exist = this.streams.find(st => st.peerId == peerId);
       if (is_exist) {
         return;
       }
-      this.remoteStreams.push({
-        id: 'data-peer-id-' + peerId,
+      this.streams.push({
+        peerId: peerId,
         src: stream,
-      })
+        muted: is_local,
+      });
     },
 
     removeStream: function (peerId) {
-      let index = this.remoteStreams.findIndex( stream => {
+      let index = this.streams.findIndex( stream => {
         return stream.peerId === peerId
       });
-      this.remoteStreams[index].src.getTracks().forEach(track => track.stop());
-      this.remoteStreams[index].src = null;
-      this.remoteStreams.splice(index);
+      this.streams[index].src.getTracks().forEach(track => track.stop());
+      this.streams[index].src = null;
+      this.streams.splice(index);
     },
 
     sendMessage: function () {
