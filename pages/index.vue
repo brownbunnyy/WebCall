@@ -56,14 +56,48 @@
             <button @click="makeRoom" class="button--green">make</button>
           </v-col>
         </v-row>
-        <v-textarea
-          outlined
-          disabled
-          v-model="messages"
-        ></v-textarea>
-        <v-text-field v-model="localText" placeholder="メッセージを送信"/>
-        <button @click="sendMessage" class="button--green">send</button>
-
+        <v-row>
+          <v-col>
+            <v-card
+              class="mx-auto"
+            >
+              <v-card-title
+                class="blue-grey white--text"
+              >
+                <span class="title">Logs</span>
+              </v-card-title>
+              <v-card-text class="py-0">
+                <v-timeline dense>
+                  <v-slide-x-reverse-transition
+                    group
+                    hide-on-leave
+                  >
+                    <v-timeline-item
+                      v-for="(message,index) in messages"
+                      :key="index"
+                      color="info"
+                      small
+                      fill-dot
+                    >
+                      <v-alert
+                        :value="true"
+                        icon="mdi-information"
+                      >
+                      {{message}}
+                      </v-alert>
+                    </v-timeline-item>
+                  </v-slide-x-reverse-transition>
+                </v-timeline>
+              </v-card-text>
+            </v-card>
+          </v-col>
+        </v-row>
+        <v-row>
+          <v-col>
+            <v-textarea outlined v-model="localText" placeholder="メッセージを送信"/>
+            <button @click="sendMessage" class="button--green">send</button>
+          </v-col>
+        </v-row>
     </v-container>
   </v-content>
 </template>
@@ -83,7 +117,7 @@ export default {
       room: null,
       peerId: '',
       roomId: 'test',
-      messages: '',
+      messages: [],
       localText: '',
     }
   },
@@ -94,11 +128,6 @@ export default {
     }
   },
   methods: {
-    // changeDevice: function () {
-    //   if(this.selectedAudio != '' && this.selectedVideo != ''){
-    //     this.connectLocalCamera();
-    //   }
-    // },
     connectLocalCamera: async function(){
       if(this.selectedAudio == '' && this.selectedVideo == ''){
         return;
@@ -146,25 +175,25 @@ export default {
       this.room = room;
 
       room.once('open', () => {
-        this.messages += this.now + '=== You joined ===\n';
+          this.messages.push(this.now + '=== You joined ===');
+      });
+
+      room.once('close', () => {
+          this.messages.push(this.now + `=== You lefted ===`);
+          this.removeStream(this.peerId);
       });
 
       room.on('peerJoin', peerId => {
-        this.messages += this.now +`=== ${peerId} joined ===\n`;
+          this.messages.push(this.now + `=== ${peerId} joined ===`);
       });
 
       room.on('peerLeave', peerId => {
-          this.messages += this.now +`=== ${peerId} lefted ===\n`;
+          this.messages.push(this.now + `=== ${peerId} lefted ===`);
           this.removeStream(peerId);
       });
 
       room.on('data', ({ data, src }) => {
-        this.messages += this.now + `${src}: ${data}\n`;
-      });
-
-      room.once('close', () => {
-          this.messages += this.now +`=== You lefted ===\n`;
-          this.removeStream(this.peerId);
+          this.messages.push(this.now + `${src}: ${data}`);
       });
 
       room.on('stream', stream => {
@@ -186,8 +215,8 @@ export default {
     },
 
     removeStream: function (peerId) {
-      let index = this.streams.findIndex( stream => {
-        return stream.peerId === peerId
+      let index = this.streams.findIndex( st => {
+        return st.peerId === peerId
       });
       this.streams[index].src.getTracks().forEach(track => track.stop());
       this.streams[index].src = null;
@@ -200,7 +229,7 @@ export default {
         return;
       }
       this.room.send(this.localText);
-      this.messages += this.now + `${this.peerId}: ${this.localText}\n`;
+      this.messages.push(this.now + `${this.peerId}: ${this.localText}`);
       this.localText = '';
     },
   },
@@ -208,7 +237,7 @@ export default {
   mounted: function () {
     const Peer = require("skyway-js");
     this.peer = new Peer({
-      key:   this.APIKey,
+      key: this.APIKey,
       debug: 3,
     });
 
