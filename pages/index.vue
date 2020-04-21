@@ -3,9 +3,31 @@
       <v-container fluid>
         <v-row>
           <v-col>
-            <h2>room: <span id="room-name" v-if="room">{{room.name}}</span></h2>
-            <template v-for="(stream,i) in remoteStreams">
-              <video :key="i" :id="stream.id" :srcObject.prop="stream.src" width="50%" autoplay></video>
+            <v-chip
+              class="ma-2"
+              color="teal"
+              text-color="white"
+              v-if="room"
+            >
+              <v-avatar left>
+                <v-icon>mdi-checkbox-marked-circle</v-icon>
+              </v-avatar>
+              接続中:{{room.name}}
+            </v-chip>
+          </v-col>
+        </v-row>
+        <v-row>
+          <v-col>
+            <template v-for="(s,i) in streams">
+              <video
+                :key="i"
+                :id="s.peerId"
+                :srcObject.prop="s.src"
+                :muted="s.muted"
+                autoplay
+                playsinline
+                width="40%"
+              ></video>
             </template>
           </v-col>
         </v-row>
