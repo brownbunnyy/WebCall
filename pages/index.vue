@@ -79,12 +79,18 @@
                       small
                       fill-dot
                     >
-                      <v-alert
-                        :value="true"
-                        icon="mdi-information"
-                      >
-                      {{message}}
-                      </v-alert>
+                      <template v-slot:icon>
+                        <v-avatar :color="message.color" size="36">
+                          <span class="white--text headline"></span>
+                        </v-avatar>
+                      </template>
+                      <v-card class="elevation-2">
+                        <v-card-title class="headline">{{message.peerId}}</v-card-title>
+                        <v-card-subtitle>{{message.time}}</v-card-subtitle>
+                        <v-card-text>
+                          {{message.value}}
+                        </v-card-text>
+                      </v-card>
                     </v-timeline-item>
                   </v-slide-x-reverse-transition>
                 </v-timeline>
@@ -175,25 +181,25 @@ export default {
       this.room = room;
 
       room.once('open', () => {
-          this.messages.push(this.now + '=== You joined ===');
+          this.pushMessage(this.peerId,'You joined');
       });
 
       room.once('close', () => {
-          this.messages.push(this.now + `=== You lefted ===`);
+          this.pushMessage(this.peerId,'You lefted');
           this.removeStream(this.peerId);
       });
 
       room.on('peerJoin', peerId => {
-          this.messages.push(this.now + `=== ${peerId} joined ===`);
+          this.pushMessage(peerId,`${peerId} joined`);
       });
 
       room.on('peerLeave', peerId => {
-          this.messages.push(this.now + `=== ${peerId} lefted ===`);
+          this.pushMessage(peerId,`${peerId} lefted`);
           this.removeStream(peerId);
       });
 
       room.on('data', ({ data, src }) => {
-          this.messages.push(this.now + `${src}: ${data}`);
+          this.pushMessage(src,data);
       });
 
       room.on('stream', stream => {
@@ -229,8 +235,17 @@ export default {
         return;
       }
       this.room.send(this.localText);
-      this.messages.push(this.now + `${this.peerId}: ${this.localText}`);
+      this.pushMessage(this.peerId,this.localText);
       this.localText = '';
+    },
+    pushMessage: function (peerId,message) {
+      console.log('message');
+      this.messages.push({
+        peerId: peerId,
+        color: peerId.toRGBCode(),
+        time: this.now,
+        value: message,
+      })
     },
   },
 
