@@ -16,7 +16,7 @@ jobs:
       name: Setup node ${{ matrix.node-version }}
       with:
         node-version: ${{ matrix.node-version }}
-      run: npm run build
+    - run: npm install
     - uses: amondnet/now-deployment@v2
       name: Publish to prod
       with:
