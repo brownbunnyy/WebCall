@@ -9,7 +9,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
       name: Checkout submodules
-    - uses: actions/setup-node@v2
+    - uses: actions/setup-node@v1
       name: Setup node ${{ matrix.node-version }}
       with:
         node-version: ${{ matrix.node-version }}
