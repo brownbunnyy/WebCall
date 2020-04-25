@@ -1,5 +1,8 @@
 name: Deploy to Now
-on: [push]
+on:
+  push:
+    branches:
+      - master
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -13,6 +16,7 @@ jobs:
       name: Setup node ${{ matrix.node-version }}
       with:
         node-version: ${{ matrix.node-version }}
+      run: npm run build
     - uses: amondnet/now-deployment@v2
       name: Publish to prod
       with:
