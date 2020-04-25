@@ -1,5 +1,6 @@
 <template>
 <v-app>
+    <!-- app-bar -->
     <v-app-bar app dense color="blue">
         <v-toolbar-title>Web Call</v-toolbar-title>
         <v-spacer></v-spacer>
@@ -15,96 +16,107 @@
             </v-avatar>
             未接続
         </v-chip>
-        <v-app-bar-nav-icon></v-app-bar-nav-icon>
+
+        <!-- dialog -->
+        <div class="text-center">
+            <v-dialog v-model="dialog">
+                <template v-slot:activator="{ on }">
+                    <v-btn color="red lighten-2" dark v-on="on">
+                        Config
+                    </v-btn>
+                </template>
+                <v-card>
+                    <v-card-title class="headline grey lighten-2" primary-title>
+                        Camera ＆ Microphone setting
+                    </v-card-title>
+                    <v-card-text>
+                        <v-row>
+                            <v-col>
+                                <v-select @change="connectLocalCamera" v-model="selectedAudio" :items="audios" item-value="value" label="マイク" />
+                                <v-select @change="connectLocalCamera" v-model="selectedVideo" :items="videos" item-value="value" label="カメラ" />
+                                <v-text-field v-model="roomId" placeholder="Room ID" label="ルームID" />
+                            </v-col>
+                        </v-row>
+                    </v-card-text>
+                    <v-divider></v-divider>
+                    <v-card-actions>
+                        <v-spacer></v-spacer>
+                        <v-row>
+                            <v-col>
+                                <button @click="leaveRoom();dialog = false" class="button--green">leave</button>
+                                <button @click="makeRoom();dialog =false" class="button--green">make</button>
+                            </v-col>
+                        </v-row>
+                    </v-card-actions>
+                </v-card>
+            </v-dialog>
+        </div>
+        <!-- dialog -->
+
     </v-app-bar>
+    <!-- app-bar -->
     <v-content>
-        <v-container fluid>
-            <v-row>
-                <v-col cols="8">
-                    <v-row justify="center" align-content="center" v-if="streams.length">
-                        <v-col cols="auto" v-for="(s,i) in streams" :key="i">
-                            <v-card shaped hover max-width="340" class="mx-auto">
-                                <v-container>
-                                    <v-row justify="space-between">
-                                        <v-col cols="auto">
-                                            <video :id="s.peerId" :srcObject.prop="s.src" :muted="true" autoplay playsinline></video>
-                                            <v-card-title class="headline" v-text="s.peerId"></v-card-title>
-                                        </v-col>
-                                    </v-row>
-                                </v-container>
-                            </v-card>
-                        </v-col>
-                    </v-row>
-                    <v-row justify="center" align-content="center" v-else>
-                        <v-col cols="auto">
-                            <v-card shaped hover max-width="340" class="mx-auto">
-                                <v-container>
-                                    <v-row justify="space-between">
-                                        <v-col cols="auto">
-                                            <v-avatar color="indigo">
-                                                <v-icon dark>mdi-account-circle</v-icon>
-                                            </v-avatar>
-                                            <v-card-title class="headline">No one else...</v-card-title>
-                                        </v-col>
-                                    </v-row>
-                                </v-container>
-                                <v-boilerplate class="mb-6" type="image, article"></v-boilerplate>
-                            </v-card>
-                        </v-col>
-                    </v-row>
-                    <v-row>
-                        <v-col>
-                            <v-select @change="connectLocalCamera" v-model="selectedAudio" :items="audios" item-value="value" label="マイク" />
-                            <v-select @change="connectLocalCamera" v-model="selectedVideo" :items="videos" item-value="value" label="カメラ" />
-                        </v-col>
-                    </v-row>
-                    <v-row>
-                        <v-col>
-                            <v-text-field v-model="roomId" placeholder="Room ID" />
-                            <button @click="leaveRoom" class="button--green">leave</button>
-                            <button @click="makeRoom" class="button--green">make</button>
-                        </v-col>
-                    </v-row>
-                </v-col>
-                <v-col cols="4">
-                    <v-row>
-                        <v-col>
-                            <v-card class="mx-auto">
-                                <v-card-title class="blue-grey white--text">
-                                    <span class="title">Logs</span>
-                                </v-card-title>
-                                <v-card-text class="py-0">
-                                    <v-timeline dense>
-                                        <v-slide-x-reverse-transition group hide-on-leave>
-                                            <v-timeline-item v-for="(message,index) in messages" :key="index" color="info" small fill-dot>
-                                                <template v-slot:icon>
-                                                    <v-avatar :color="message.color" size="36">
-                                                        <span class="white--text headline"></span>
-                                                    </v-avatar>
-                                                </template>
-                                                <v-card class="elevation-2">
-                                                    <v-card-title class="headline">{{message.peerId}}</v-card-title>
-                                                    <v-card-subtitle>{{message.time}}</v-card-subtitle>
-                                                    <v-card-text>
-                                                        {{message.value}}
-                                                    </v-card-text>
-                                                </v-card>
-                                            </v-timeline-item>
-                                        </v-slide-x-reverse-transition>
-                                    </v-timeline>
-                                </v-card-text>
-                            </v-card>
-                        </v-col>
-                    </v-row>
-                    <v-row>
-                        <v-col>
-                            <v-textarea outlined v-model="localText" placeholder="メッセージを送信" />
-                            <button @click="sendMessage" class="button--green">send</button>
-                        </v-col>
-                    </v-row>
+        <v-container fluid fill-heigh>
+            <v-row justify="center" align-content="center" v-if="streams.length">
+                <v-col cols="auto" v-for="(s,i) in streams" :key="i">
+                    <v-card shaped hover width="340" height="350">
+                        <v-container>
+                            <v-row justify="space-between">
+                                <v-col cols="auto">
+                                    <video :id="s.peerId" :srcObject.prop="s.src" :muted="true" autoplay playsinline width="320" height="240"></video>
+                                    <v-card-title class="headline" v-text="s.peerId"></v-card-title>
+                                </v-col>
+                            </v-row>
+                        </v-container>
+                    </v-card>
                 </v-col>
             </v-row>
-
+            <v-row style="height: 300px;" justify="center" align-content="center" v-else>
+                <v-col cols="auto">
+                    <v-card shaped hover class="mx-auto">
+                        <v-container>
+                            <v-row justify="space-between">
+                                <v-col cols="auto">
+                                    <v-avatar color="indigo">
+                                        <v-icon dark>mdi-account-circle</v-icon>
+                                    </v-avatar>
+                                    <v-card-title class="headline">No one else...</v-card-title>
+                                </v-col>
+                            </v-row>
+                        </v-container>
+                    </v-card>
+                </v-col>
+            </v-row>
+            <v-row>
+                <v-col>
+                    <v-card fluid class="mx-auto">
+                        <v-card-title class="blue-grey white--text" dense>
+                            <span class="title">chat</span>
+                        </v-card-title>
+                        <v-card-text v-if="messages.length">
+                            <v-timeline dense>
+                                <v-timeline-item v-for="(message,index) in messages" :key="index" :color="message.color" small fill-dot>
+                                    <v-card class="elevation-2">
+                                        <v-card-title class="headline">{{message.peerId}}</v-card-title>
+                                        <v-card-subtitle>{{message.time}}</v-card-subtitle>
+                                        <v-card-text>{{message.value}}</v-card-text>
+                                    </v-card>
+                                </v-timeline-item>
+                            </v-timeline>
+                        </v-card-text>
+                        <v-card-actions>
+                            <v-row>
+                                <v-col cols="11">
+                                    <v-text-field outlined v-model="localText" placeholder="メッセージを送信" />
+                                </v-col>
+                                <v-col cols="1">
+                                    <button @click="sendMessage" class="button--green">send</button>
+                                </v-col>
+                            </v-row>
+                        </v-card-actions>
+                    </v-card>
+                </v-col>
+            </v-row>
         </v-container>
     </v-content>
 </v-app>
@@ -126,6 +138,8 @@ export default {
             roomId: 'test',
             messages: [],
             localText: '',
+
+            dialog: false,
         }
     },
     computed: {
@@ -152,14 +166,7 @@ export default {
                     }
                 } : false
             }
-            constraints.video.width = {
-                min: 320,
-                max: 320
-            };
-            constraints.video.height = {
-                min: 240,
-                max: 240
-            };
+
             this.localStream = await navigator.mediaDevices.getUserMedia(constraints);
             this.addStream(this.localStream, true);
         },
