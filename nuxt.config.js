@@ -1,4 +1,3 @@
-
 require('dotenv').config();
 export default {
   mode: "universal",
@@ -7,24 +6,34 @@ export default {
    */
   head: {
     title: process.env.npm_package_name || "",
-    meta: [
-      { charset: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
+    meta: [{
+        charset: "utf-8"
+      },
+      {
+        name: "viewport",
+        content: "width=device-width, initial-scale=1"
+      },
       {
         hid: "description",
         name: "description",
         content: process.env.npm_package_description || ""
       }
     ],
-    link: [{ rel: "icon", type: "image/x-icon", href: "/favicon.ico" }],
-    script: [
-      { src: 'chame.js' }
-    ],
+    link: [{
+      rel: "icon",
+      type: "image/x-icon",
+      href: "/favicon.ico"
+    }],
+    script: [{
+      src: 'chame.js'
+    }],
   },
   /*
    ** Customize the progress-bar color
    */
-  loading: { color: "#fff" },
+  loading: {
+    color: "#fff"
+  },
   /*
    ** Global CSS
    */
@@ -65,9 +74,12 @@ export default {
   vuetify: {
     theme: {
       primary: '#3f51b5',
-      secondary: '#b0bec5',
-      accent: '#8c9eff',
-      error: '#b71c1c'
+      secondary: '#4caf50',
+      accent: '#8bc34a',
+      error: '#2196f3',
+      warning: '#03a9f4',
+      info: '#009688',
+      success: '#ff9800'
     }
   }
 };
