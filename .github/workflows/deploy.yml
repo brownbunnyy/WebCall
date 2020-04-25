@@ -1,28 +1,22 @@
 name: Deploy to Now
 on: [push]
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [12.14.0]
+        node-version: [12.x]
     steps:
     - uses: actions/checkout@v2
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v1
+      name: Checkout submodules
+    - uses: actions/setup-node@v2
+      name: Setup node ${{ matrix.node-version }}
       with:
         node-version: ${{ matrix.node-version }}
-    - run: yarn install
-      env:
-        CI: true
-  deploy:
-    name: Publish to prod
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: amondnet/now-deployment@v2
-        with:
-          zeit-token: ${{ secrets.ZEIT_TOKEN }}
-          now-args: '--prod'
-          now-org-id: ${{ secrets.ORG_ID}}
-          now-project-id: ${{ secrets.PROJECT_ID}}
+    - uses: amondnet/now-deployment@v2
+      name: Publish to prod
+      with:
+        zeit-token: ${{ secrets.ZEIT_TOKEN }}
+        now-args: '--prod'
+        now-org-id: ${{ secrets.ORG_ID}}
+        now-project-id: ${{ secrets.PROJECT_ID}}
