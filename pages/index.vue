@@ -1,39 +1,39 @@
 <template>
 <v-app>
+
     <!-- app-bar -->
-    <v-app-bar app dense color="blue">
+    <v-app-bar app dense color="blue-grey">
         <v-toolbar-title>Web Call</v-toolbar-title>
         <v-spacer></v-spacer>
-        <v-chip class="ma-2" color="teal" text-color="white" v-if="room">
-            <v-avatar left>
-                <v-icon>mdi-checkbox-marked-circle</v-icon>
-            </v-avatar>
-            接続中：{{room.name}}（{{streams.length}}）
-        </v-chip>
-        <v-chip class="ma-2" color="orange" text-color="white" v-else>
-            <v-avatar left>
-                <v-icon>mdi-close-circle</v-icon>
-            </v-avatar>
-            未接続
-        </v-chip>
-
-        <!-- dialog -->
+        <!-- ルームダイアログ -->
         <div class="text-center">
-            <v-dialog v-model="dialog">
+            <v-dialog v-model="dialog.room">
+                <!-- 接続中アイコン -->
                 <template v-slot:activator="{ on }">
-                    <v-btn color="red lighten-2" dark v-on="on">
-                        Config
-                    </v-btn>
+                    <!-- 接続中アイコン -->
+                    <v-chip @click="leaveRoom()" class="ma-2" color="orange" text-color="white" v-if="room">
+                        <v-avatar left>
+                            <v-icon>mdi-checkbox-marked-circle</v-icon>
+                        </v-avatar>
+                        接続中：{{room.name}}（{{streams.length}}）
+                    </v-chip>
+                    <!-- /接続中アイコン -->
+                    <!-- 接続アイコン -->
+                    <v-chip class="ma-2" color="green" text-color="white" v-else v-on="on">
+                        <v-avatar left>
+                            <v-icon>mdi-plus-circle</v-icon>
+                        </v-avatar>
+                        接続
+                    </v-chip>
+                    <!-- /接続アイコン -->
                 </template>
                 <v-card>
                     <v-card-title class="headline grey lighten-2" primary-title>
-                        Camera ＆ Microphone setting
+                        Join or Make Room
                     </v-card-title>
                     <v-card-text>
                         <v-row>
                             <v-col>
-                                <v-select @change="connectLocalCamera" v-model="selectedAudio" :items="audios" item-value="value" label="マイク" />
-                                <v-select @change="connectLocalCamera" v-model="selectedVideo" :items="videos" item-value="value" label="カメラ" />
                                 <v-text-field v-model="roomId" placeholder="Room ID" label="ルームID" />
                             </v-col>
                         </v-row>
@@ -43,27 +43,49 @@
                         <v-spacer></v-spacer>
                         <v-row>
                             <v-col>
-                                <button @click="leaveRoom();dialog = false" class="button--green">leave</button>
-                                <button @click="makeRoom();dialog =false" class="button--green">make</button>
+                                <button @click="makeRoom()" class="button--green">Join or Make</button>
                             </v-col>
                         </v-row>
                     </v-card-actions>
                 </v-card>
             </v-dialog>
         </div>
-        <!-- dialog -->
+        <!-- /ルームダイアログ -->
 
+        <!-- コンフィグダイアログ -->
+        <div class="text-center">
+            <v-dialog v-model="dialog.config">
+                <template v-slot:activator="{ on }">
+                    <v-icon @click="connectDevice" v-on="on">mdi-cog</v-icon>
+                </template>
+                <v-card>
+                    <v-card-title class="headline grey lighten-2" primary-title>
+                        Camera ＆ Microphone setting
+                    </v-card-title>
+                    <v-card-text>
+                        <v-row>
+                            <v-col>
+                                <v-select @change="connectDevice" v-model="selectedAudio" :items="audios" item-value="value" label="マイク" />
+                                <v-select @change="connectDevice" v-model="selectedVideo" :items="videos" item-value="value" label="カメラ" />
+                            </v-col>
+                        </v-row>
+                    </v-card-text>
+                </v-card>
+            </v-dialog>
+        </div>
+        <!-- /コンフィグダイアログ -->
     </v-app-bar>
-    <!-- app-bar -->
+    <!-- /app-bar -->
+
     <v-content>
         <v-container fluid fill-heigh>
             <v-row justify="center" align-content="center" v-if="streams.length">
                 <v-col cols="auto" v-for="(s,i) in streams" :key="i">
-                    <v-card shaped hover width="340" height="350">
+                    <v-card shaped>
                         <v-container>
                             <v-row justify="space-between">
-                                <v-col cols="auto">
-                                    <video :id="s.peerId" :srcObject.prop="s.src" :muted="true" autoplay playsinline width="320" height="240"></video>
+                                <v-col>
+                                    <video :id="s.peerId" :srcObject.prop="s.src" :muted="true" autoplay playsinline></video>
                                     <v-card-title class="headline" v-text="s.peerId"></v-card-title>
                                 </v-col>
                             </v-row>
@@ -71,12 +93,12 @@
                     </v-card>
                 </v-col>
             </v-row>
-            <v-row style="height: 300px;" justify="center" align-content="center" v-else>
+            <v-row justify="center" align-content="center" v-else>
                 <v-col cols="auto">
-                    <v-card shaped hover class="mx-auto">
+                    <v-card shaped>
                         <v-container>
                             <v-row justify="space-between">
-                                <v-col cols="auto">
+                                <v-col>
                                     <v-avatar color="indigo">
                                         <v-icon dark>mdi-account-circle</v-icon>
                                     </v-avatar>
@@ -107,10 +129,12 @@
                         <v-card-actions>
                             <v-row>
                                 <v-col cols="11">
-                                    <v-text-field outlined v-model="localText" placeholder="メッセージを送信" />
+                                    <div style="height:100%;">
+                                        <v-textarea rows="3" outlined v-model="localText" placeholder="メッセージを送信" />
+                                    </div>
                                 </v-col>
                                 <v-col cols="1">
-                                    <button @click="sendMessage" class="button--green">send</button>
+                                    <button style="height:70%;" @click="sendMessage" class="button--green">send</button>
                                 </v-col>
                             </v-row>
                         </v-card-actions>
@@ -139,7 +163,23 @@ export default {
             messages: [],
             localText: '',
 
-            dialog: false,
+            dialog: {
+                room: false,
+                config: false,
+            },
+            constraints: {
+                audio: true,
+                video: {
+                    width: {
+                        min: 400,
+                        max: 400
+                    },
+                    height: {
+                        min: 300,
+                        max: 300
+                    }
+                }
+            }
         }
     },
     computed: {
@@ -149,26 +189,78 @@ export default {
         }
     },
     methods: {
-        connectLocalCamera: async function () {
-            if (this.selectedAudio == '' && this.selectedVideo == '') {
-                return;
+        connectDevice: async function () {
+
+            if (this.localStream) {
+                this.removeStream(this.peerId);
             }
 
-            const constraints = {
-                audio: this.selectedAudio ? {
-                    deviceId: {
-                        exact: this.selectedAudio
-                    }
-                } : false,
-                video: this.selectedVideo ? {
-                    deviceId: {
-                        exact: this.selectedVideo
-                    }
-                } : false
+            let constraints = {
+                ...this.constraints
+            };
+
+            if (this.selectedAudio != '') {
+                constraints.audio = {
+                    deviceId: this.selectedAudio
+                };
             }
 
-            this.localStream = await navigator.mediaDevices.getUserMedia(constraints);
-            this.addStream(this.localStream, true);
+            if (this.selectedVideo != '') {
+                constraints.video = {
+                    deviceId: this.selectedVideo
+                };
+            }
+
+            await navigator.mediaDevices.getUserMedia(constraints)
+                .then((stream) => {
+                    if ('deviceId' in {
+                            ...constraints.video,
+                            ...constraints.audio
+                        }) {
+                        const track = stream.getVideoTracks()[0];
+                        track.applyConstraints({
+                            ...constraints.video,
+                            advanced: [{
+                                ...this.constraints.video
+                            }]
+                        });
+                    }
+                    this.localStream = stream;
+                    this.addStream(this.localStream, true);
+                    if (!this.audios.length || !this.videos.length) {
+                        this.getDevices();
+                    }
+                    return true;
+                })
+                .catch(err => {
+                    alert(err);
+                    return false;
+                });
+        },
+
+        getDevices: function () {
+            navigator.mediaDevices.enumerateDevices()
+                .then((deviceInfos) => {
+                    for (let i = 0; i !== deviceInfos.length; ++i) {
+                        const deviceInfo = deviceInfos[i]
+                        if (deviceInfo.kind === 'audioinput') {
+                            this.audios.push({
+                                text: deviceInfo.label ||
+                                    `Microphone ${this.audios.length + 1}`,
+                                value: deviceInfo.deviceId
+                            })
+                        } else if (deviceInfo.kind === 'videoinput') {
+                            this.videos.push({
+                                text: deviceInfo.label ||
+                                    `Camera  ${this.videos.length - 1}`,
+                                value: deviceInfo.deviceId
+                            })
+                        }
+                    }
+                }).then(() => {
+                    this.selectedAudio = this.audios[0].value;
+                    this.selectedVideo = this.videos[0].value;
+                });
         },
 
         // ルームから退出
@@ -181,7 +273,7 @@ export default {
 
         // ルームに参加
         makeRoom: function () {
-            this.connectLocalCamera().then(() => {
+            this.connectDevice().then(() => {
                 const room = this.peer.joinRoom(this.roomId, {
                     mode: 'sfu',
                     stream: this.localStream,
@@ -194,6 +286,7 @@ export default {
             if (this.room) {
                 this.room.close();
             }
+
             this.room = room;
 
             room.once('open', () => {
@@ -202,6 +295,7 @@ export default {
 
             room.once('close', () => {
                 this.pushMessage(this.peerId, 'You lefted');
+                this.localStream = null;
                 this.removeStream(this.peerId);
             });
 
@@ -224,6 +318,8 @@ export default {
             room.on('stream', stream => {
                 this.addStream(stream);
             });
+
+            this.dialog.room = false;
         },
 
         addStream: function (stream, is_local = false) {
@@ -257,8 +353,8 @@ export default {
             this.pushMessage(this.peerId, this.localText);
             this.localText = '';
         },
+
         pushMessage: function (peerId, message) {
-            console.log('message');
             this.messages.push({
                 peerId: peerId,
                 color: peerId.toRGBCode(),
@@ -278,30 +374,6 @@ export default {
         this.peer.on('open', () => {
             this.peerId = this.peer.id;
         });
-
-        //デバイスへのアクセス
-        navigator.mediaDevices.enumerateDevices()
-            .then((deviceInfos) => {
-                for (let i = 0; i !== deviceInfos.length; ++i) {
-                    const deviceInfo = deviceInfos[i]
-                    if (deviceInfo.kind === 'audioinput') {
-                        this.audios.push({
-                            text: deviceInfo.label ||
-                                `Microphone ${this.audios.length + 1}`,
-                            value: deviceInfo.deviceId
-                        })
-                    } else if (deviceInfo.kind === 'videoinput') {
-                        this.videos.push({
-                            text: deviceInfo.label ||
-                                `Camera  ${this.videos.length - 1}`,
-                            value: deviceInfo.deviceId
-                        })
-                    }
-                }
-            }).then(() => {
-                this.selectedAudio = this.audios[0].value;
-                this.selectedVideo = this.videos[0].value;
-            });
     }
 }
 </script>
