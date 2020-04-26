@@ -85,7 +85,7 @@
                         <v-container>
                             <v-row justify="space-between">
                                 <v-col>
-                                    <video :id="s.peerId" :srcObject.prop="s.src" :muted="true" autoplay playsinline></video>
+                                    <video :id="s.peerId" :srcObject.prop="s.src" :muted="s.muted" autoplay playsinline></video>
                                     <v-card-title class="headline" v-text="s.peerId"></v-card-title>
                                 </v-col>
                             </v-row>
