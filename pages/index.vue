@@ -143,7 +143,7 @@
             </v-sheet>
         </v-bottom-sheet>
     </div>
-    <v-snackbar top timeout="1500" v-model="snackbar">
+    <v-snackbar top :timeout="1500" v-model="snackbar">
         {{snackbarMessage}}
     </v-snackbar>
 
