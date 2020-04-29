@@ -1,9 +1,27 @@
 <template>
 <v-app>
+    <v-navigation-drawer :clipped="$vuetify.breakpoint.lgAndUp" v-model="dialog.drawer" app>
+        <v-card class="mx-auto">
+            <v-list three-line>
+                <template v-for="(message,index) in messages">
+                    <v-list-item :key="index">
+                        <v-list-item-avatar>
+                            <v-avatar :color="message.color" size="20"></v-avatar>
+                        </v-list-item-avatar>
+                        <v-list-item-content>
+                            <v-list-item-title v-html="message.peerId"></v-list-item-title>
+                            <v-list-item-subtitle v-html="message.time"></v-list-item-subtitle>
+                            <v-list-item-subtitle v-html="message.value"></v-list-item-subtitle>
+                        </v-list-item-content>
+                    </v-list-item>
+                </template>
+            </v-list>
+        </v-card>
+    </v-navigation-drawer>
 
     <!-- app-bar -->
-    <v-app-bar app dense color="blue-grey">
-        <v-toolbar-title>Web Call</v-toolbar-title>
+    <v-app-bar app dense :clipped-left="$vuetify.breakpoint.lgAndUp" color="blue-grey">
+        <v-toolbar-title>WebCall</v-toolbar-title>
         <v-spacer></v-spacer>
         <!-- ルームダイアログ -->
         <div class="text-center">
@@ -28,7 +46,7 @@
                     <!-- /接続アイコン -->
                 </template>
                 <v-card>
-                    <v-card-title class="headline grey lighten-2" primary-title>
+                    <v-card-title>
                         Join or Make Room
                     </v-card-title>
                     <v-card-text>
@@ -38,7 +56,6 @@
                             </v-col>
                         </v-row>
                     </v-card-text>
-                    <v-divider></v-divider>
                     <v-card-actions>
                         <v-spacer></v-spacer>
                         <v-row>
@@ -53,30 +70,30 @@
         <!-- /ルームダイアログ -->
 
         <!-- コンフィグダイアログ -->
-        <div class="text-center">
+        <!-- <div class="text-center">
             <v-dialog v-model="dialog.config">
                 <template v-slot:activator="{ on }">
-                    <v-icon @click="connectDevice" v-on="on">mdi-cog</v-icon>
+                    <v-icon :disabled="!localStream" v-on="on">mdi-cog</v-icon>
                 </template>
                 <v-card>
-                    <v-card-title class="headline grey lighten-2" primary-title>
-                        Camera ＆ Microphone setting
+                    <v-card-title>
+                        <v-icon>mdi-camera</v-icon>
+                        <v-icon>mdi-microphone</v-icon>
                     </v-card-title>
                     <v-card-text>
                         <v-row>
                             <v-col>
-                                <v-select @change="connectDevice" v-model="selectedAudio" :items="audios" item-value="value" label="マイク" />
-                                <v-select @change="connectDevice" v-model="selectedVideo" :items="videos" item-value="value" label="カメラ" />
+                                <v-select @change="changeDevice" v-model="selectedAudio" :items="audios" item-value="value" label="マイク" />
+                                <v-select @change="changeDevice" v-model="selectedVideo" :items="videos" item-value="value" label="カメラ" />
                             </v-col>
                         </v-row>
                     </v-card-text>
                 </v-card>
             </v-dialog>
-        </div>
+        </div> -->
         <!-- /コンフィグダイアログ -->
     </v-app-bar>
     <!-- /app-bar -->
-
     <v-content>
         <v-container fluid fill-heigh>
             <v-row justify="center" align-content="center" v-if="streams.length">
@@ -85,7 +102,7 @@
                         <v-container>
                             <v-row justify="space-between">
                                 <v-col>
-                                    <video :id="s.peerId" :srcObject.prop="s.src" :muted="s.muted" autoplay playsinline></video>
+                                    <video :id="s.peerId" :srcObject.prop="s.src" :muted="true" autoplay playsinline></video>
                                     <v-card-title class="headline" v-text="s.peerId"></v-card-title>
                                 </v-col>
                             </v-row>
@@ -109,40 +126,23 @@
                     </v-card>
                 </v-col>
             </v-row>
-            <v-row>
-                <v-col>
-                    <v-card fluid class="mx-auto">
-                        <v-card-title class="blue-grey white--text" dense>
-                            <span class="title">chat</span>
-                        </v-card-title>
-                        <v-card-text v-if="messages.length">
-                            <v-timeline dense>
-                                <v-timeline-item v-for="(message,index) in messages" :key="index" :color="message.color" small fill-dot>
-                                    <v-card class="elevation-2">
-                                        <v-card-title class="headline">{{message.peerId}}</v-card-title>
-                                        <v-card-subtitle>{{message.time}}</v-card-subtitle>
-                                        <v-card-text>{{message.value}}</v-card-text>
-                                    </v-card>
-                                </v-timeline-item>
-                            </v-timeline>
-                        </v-card-text>
-                        <v-card-actions>
-                            <v-row>
-                                <v-col cols="11">
-                                    <div style="height:100%;">
-                                        <v-textarea rows="3" outlined v-model="localText" placeholder="メッセージを送信" />
-                                    </div>
-                                </v-col>
-                                <v-col cols="1">
-                                    <button style="height:70%;" @click="sendMessage" class="button--green">send</button>
-                                </v-col>
-                            </v-row>
-                        </v-card-actions>
-                    </v-card>
-                </v-col>
-            </v-row>
         </v-container>
     </v-content>
+    <div class="text-center">
+        <v-btn color="blue" dark @click="dialog.sheet = !dialog.sheet">
+            open chat
+        </v-btn>
+        <v-bottom-sheet v-model="dialog.sheet">
+            <v-sheet class="text-center" height="250px">
+                <v-btn class="mt-6" text color="red" @click="dialog.sheet = !dialog.sheet">close</v-btn>
+                <v-container>
+                    <v-textarea rows="3" outlined v-model="localText" placeholder="メッセージを送信" />
+                    <button @click="sendMessage" class="button--green">send</button>
+                </v-container>
+            </v-sheet>
+        </v-bottom-sheet>
+    </div>
+
 </v-app>
 </template>
 
@@ -166,20 +166,21 @@ export default {
             dialog: {
                 room: false,
                 config: false,
+                drawer: true,
+                sheet: false,
             },
             constraints: {
                 audio: true,
                 video: {
-                    width: {
-                        min: 400,
-                        max: 400
-                    },
                     height: {
-                        min: 300,
-                        max: 300
-                    }
+                        exact: 400
+                    },
+                    width: {
+                        exact: 300
+                    },
                 }
-            }
+            },
+            spec: '',
         }
     },
     computed: {
@@ -192,44 +193,14 @@ export default {
         connectDevice: async function () {
 
             if (this.localStream) {
+                this.localStream = null;
                 this.removeStream(this.peerId);
             }
 
-            let constraints = {
-                ...this.constraints
-            };
-
-            if (this.selectedAudio != '') {
-                constraints.audio = {
-                    deviceId: this.selectedAudio
-                };
-            }
-
-            if (this.selectedVideo != '') {
-                constraints.video = {
-                    deviceId: this.selectedVideo
-                };
-            }
-
-            await navigator.mediaDevices.getUserMedia(constraints)
+            await navigator.mediaDevices.getUserMedia(this.constraints)
                 .then((stream) => {
-                    if ('deviceId' in {
-                            ...constraints.video,
-                            ...constraints.audio
-                        }) {
-                        const track = stream.getVideoTracks()[0];
-                        track.applyConstraints({
-                            ...constraints.video,
-                            advanced: [{
-                                ...this.constraints.video
-                            }]
-                        });
-                    }
                     this.localStream = stream;
                     this.addStream(this.localStream, true);
-                    if (!this.audios.length || !this.videos.length) {
-                        this.getDevices();
-                    }
                     return true;
                 })
                 .catch(err => {
@@ -339,6 +310,9 @@ export default {
             let index = this.streams.findIndex(st => {
                 return st.peerId === peerId
             });
+            if (!~index) {
+                return
+            }
             this.streams[index].src.getTracks().forEach(track => track.stop());
             this.streams[index].src = null;
             this.streams.splice(index);
@@ -374,6 +348,8 @@ export default {
         this.peer.on('open', () => {
             this.peerId = this.peer.id;
         });
+        this.getDevices();
+        this.pushMessage('system', 'Welcome!');
     }
 }
 </script>
