@@ -143,6 +143,9 @@
             </v-sheet>
         </v-bottom-sheet>
     </div>
+    <v-snackbar top timeout="1500" v-model="snackbar">
+        {{snackbarMessage}}
+    </v-snackbar>
 
 </v-app>
 </template>
@@ -181,7 +184,8 @@ export default {
                     },
                 }
             },
-            spec: '',
+            snackbar: false,
+            snackbarMessage: '',
         }
     },
     computed: {
@@ -331,6 +335,8 @@ export default {
 
         pushMessage: function (peerId, message) {
             this.dialog.drawer = true;
+            this.snackbar = true;
+            this.snackbarMessage = `${peerId}: ${message}`;
             this.messages.push({
                 peerId: peerId,
                 color: peerId.toRGBCode(),
