@@ -21,6 +21,7 @@
 
     <!-- app-bar -->
     <v-app-bar app dense :clipped-left="$vuetify.breakpoint.lgAndUp" color="blue-grey">
+        <v-app-bar-nav-icon @click.stop="dialog.drawer = !dialog.drawer" />
         <v-toolbar-title>WebCall</v-toolbar-title>
         <v-spacer></v-spacer>
         <!-- ルームダイアログ -->
@@ -329,6 +330,7 @@ export default {
         },
 
         pushMessage: function (peerId, message) {
+            this.dialog.drawer = true;
             this.messages.push({
                 peerId: peerId,
                 color: peerId.toRGBCode(),
