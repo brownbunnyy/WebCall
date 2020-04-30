@@ -96,14 +96,16 @@
     </v-app-bar>
     <!-- /app-bar -->
     <v-content>
-        <v-container fluid fill-heigh>
+        <v-container class="fill-height" fluid>
             <v-row justify="center" align-content="center" v-if="streams.length">
                 <v-col cols="auto" v-for="(s,i) in streams" :key="i">
                     <v-card shaped>
                         <v-container>
                             <v-row justify="space-between">
                                 <v-col>
-                                    <video :id="s.peerId" :srcObject.prop="s.src" :muted="true" autoplay playsinline></video>
+                                    <v-card-text>
+                                        <video :id="s.peerId" :srcObject.prop="s.src" :muted="true" autoplay playsinline></video>
+                                    </v-card-text>
                                     <v-card-title class="headline" v-text="s.peerId"></v-card-title>
                                 </v-col>
                             </v-row>
@@ -111,28 +113,23 @@
                     </v-card>
                 </v-col>
             </v-row>
-            <v-row justify="center" align-content="center" v-else>
+            <v-row align="center" justify="center" v-else>
                 <v-col cols="auto">
-                    <v-card shaped>
-                        <v-container>
-                            <v-row justify="space-between">
-                                <v-col>
-                                    <v-avatar color="indigo">
-                                        <v-icon dark>mdi-account-circle</v-icon>
-                                    </v-avatar>
-                                    <v-card-title class="headline">No one else...</v-card-title>
-                                </v-col>
-                            </v-row>
-                        </v-container>
+                    <v-card>
+                        <v-card-title>How to get started</v-card-title>
+                        <v-card-text>
+                            <v-img width="300" src="/start.png"></v-img>
+                        </v-card-text>
                     </v-card>
                 </v-col>
             </v-row>
         </v-container>
     </v-content>
+
+    <v-btn bottom color="pink" dark fab fixed right @click="dialog.sheet = !dialog.sheet">
+        <v-icon>mdi-chat</v-icon>
+    </v-btn>
     <div class="text-center">
-        <v-btn color="blue" dark @click="dialog.sheet = !dialog.sheet">
-            open chat
-        </v-btn>
         <v-bottom-sheet v-model="dialog.sheet">
             <v-sheet class="text-center" height="250px">
                 <v-btn class="mt-6" text color="red" @click="dialog.sheet = !dialog.sheet">close</v-btn>
@@ -146,7 +143,6 @@
     <v-snackbar top :timeout="1500" v-model="snackbar">
         {{snackbarMessage}}
     </v-snackbar>
-
 </v-app>
 </template>
 
