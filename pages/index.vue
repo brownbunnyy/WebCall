@@ -185,10 +185,7 @@ export default {
         }
     },
     computed: {
-        now: function () {
-            let dd = new Date();
-            return `${dd.getMonth()}/${dd.getDate()} ${dd.getHours()}:${dd.getMinutes()}:${dd.getSeconds()}`;
-        }
+
     },
     methods: {
         connectDevice: async function () {
@@ -336,10 +333,15 @@ export default {
             this.messages.push({
                 peerId: peerId,
                 color: peerId.toRGBCode(),
-                time: this.now,
+                time: this.now(),
                 value: message,
             })
         },
+
+        now: function () {
+            let dd = new Date();
+            return `${dd.getMonth()}/${dd.getDate()} ${dd.getHours()}:${dd.getMinutes()}:${dd.getSeconds()}`;
+        }
     },
 
     mounted: function () {
