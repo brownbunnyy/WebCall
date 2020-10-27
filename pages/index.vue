@@ -159,7 +159,7 @@ export default {
             streams: [],
             room: null,
             peerId: '',
-            roomId: 'test',
+            roomId: Math.random().toString(32).substring(2),
             messages: [],
             localText: '',
 
